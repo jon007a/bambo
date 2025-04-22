@@ -1,0 +1,28 @@
+services:
+  local-nexus:
+    image: sonatype/nexus3:3.74.0
+    container_name: local-nexus-container
+    restart: always
+    ports:
+      - "9101:8081"
+      - "8083:8083"  # Добавлен порт для Docker registry
+    volumes:
+      - nexus_nexus_data:/nexus-data  # Использование существующего volume
+    networks:
+      - atlassian_network  # Подключение к общей сети
+    environment:
+      INSTALL4J_ADD_VM_PARAMS: "-Xms128m -Xmx512m -XX:MaxDirectMemorySize=768m -Djava.util.prefs.userRoot=/nexus-data/javaprefs"
+    healthcheck:
+      test: curl -f http://localhost:8081/service/rest/v1/repositories || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  nexus_nexus_data:
+    external: true  # Объявление volume как внешнего
+
+networks:
+  atlassian_network:
+    external: true  # Объявление сети как внешней
